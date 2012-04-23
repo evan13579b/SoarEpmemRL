@@ -1,0 +1,19 @@
+sp {elaborate*state*name
+   (state <s> ^superstate.operator.name <name>)
+-->
+   (<s> ^name <name>)
+}
+
+sp {elaborate*state*top-state
+   (state <s> ^superstate.top-state <ts>)
+-->
+   (<s> ^top-state <ts>)
+}
+
+sp {elaborate*state*all
+   (state <s> ^superstate.start-id <start>
+              ^superstate.end-id <end>)
+-->
+   (<s> ^start-id <start>)
+   (<s> ^end-id <end>)
+}

@@ -1,0 +1,7 @@
+sp {elaborate*thinking
+   (state <s> ^name junk-health
+              ^thinking-start <thinking-start>
+              ^epmem.present-id >= <thinking-start>)
+-->
+   (<s> ^thinking true)
+}

@@ -1,0 +1,16 @@
+##
+# When a direction is chosen, assert the associated reward
+##
+sp {elaborate*reward
+   (state <s> ^name junk-health
+              ^reward-link <r>
+              ^location <d-name>
+              ^direction <dir>
+        ^previous <p-dir>
+        ^discount-apply <dis>) 
+   (<dir> ^name <d-name> ^previous <p-dir> ^reward <d-reward>)
+-->
+   (<r> ^reward <r1> <r2>)
+   (<r1> ^value <d-reward>)
+   (<r2> ^value <dis>)
+}
