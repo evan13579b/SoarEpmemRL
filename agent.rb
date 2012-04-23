@@ -187,7 +187,6 @@ class Agent
     @graph_q.write(@graph_file)
   end
 
-  # TODO: add food settings
   def to_yaml
     OPTIONS.merge(WELLS).to_yaml
   end
@@ -278,13 +277,18 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-agent = Agent.new(OPTIONS)
-OPTIONS[:runs].times do
-  agent.run()
-end
-agent.save_graph
+unless OPTIONS[:config].nil?
+  # TODO DO BATCHING
+else
+  # Single shot run
+  agent = Agent.new(OPTIONS)
+  OPTIONS[:runs].times do
+    agent.run()
+  end
+  agent.save_graph
 
-unless $save.nil?
-  $save.write agent.to_yaml
-  $save.close
+  unless $save.nil?
+    $save.write agent.to_yaml
+    $save.close
+  end
 end
