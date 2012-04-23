@@ -1,0 +1,3 @@
+pushd junk-health
+source junk-health_source.soar
+popd

@@ -1,0 +1,11 @@
+##
+# When health reaches 0, halt
+##
+sp {elaborate*done
+   (state <s> ^name junk-health
+   ^health <health> < 0 )
+-->
+   (write (crlf) |Dead|)
+   (halt)
+}
+

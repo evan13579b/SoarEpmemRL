@@ -1,0 +1,6 @@
+sp {propose*re-evaluation
+   (state <s> ^re-evaluate)
+-->
+   (<s> ^operator <o> + !)
+   (<o> ^name re-evaluation)
+}
