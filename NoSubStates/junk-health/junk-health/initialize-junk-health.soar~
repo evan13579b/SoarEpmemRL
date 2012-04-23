@@ -37,7 +37,7 @@ sp {apply*initialize-junk-health
    (<d3> ^name center ^reward 0 ^previous junk ^negreward 0)
    (<d4> ^name center ^reward 0 ^previous health ^negreward 0)
    (<s> ^start-id <start>)
-   (<s> ^thinking-start (+ 1000 <start>))
+   (<s> ^thinking-start (+ 50 <start>))
    (<s> ^study-reward <study-reward>)
    (<study-reward> ^junk -5 ^health 0 ^center 0)
 }

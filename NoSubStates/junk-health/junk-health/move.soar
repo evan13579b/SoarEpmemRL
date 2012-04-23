@@ -217,3 +217,41 @@ sp {apply*ponder-move-and-counter
    (write (crlf) |Moved: | <dir>)
    (write (crlf) |Health: | <health>)
 }
+
+sp {initial-recall-first-episode
+   (state <s> ^start-id <start>
+              ^thinking-start <thinking-start>
+              ^epmem.present-id <thinking-start>
+              ^epmem.command <command>)
+-->
+   (<command> ^retrieve <start>)
+}
+
+sp {general-recall-first-episode
+   (state <s> ^start-id <start>
+              ^epmem.result.memory-id <thinking-start>
+              ^thinking-start <thinking-start>
+              ^epmem.command <command>)
+-->
+   (<command> ^retrieve <start>)
+}
+
+sp {recall-next-episode
+   (state <s> ^thinking true
+              ^thinking-start <thinking-start>
+              ^epmem.result.memory-id <memory-id> <> <thinking-start>
+              -^epmem.present-id <thinking-start>
+              ^epmem.command <command>)
+-->
+   (<command> ^retrieve (+ 1 <memory-id>))
+
+}
+
+sp {reject-non-repeat-moves
+   (state <s> ^operator <op> +
+              ^thinking true
+              ^epmem.result.retrieved.location <dir>)
+   (<op> ^dir <> <dir>)
+-->
+   (<s> ^operator <op> -)
+}
