@@ -78,14 +78,16 @@ class Agent
   end
 
   def graph_setup
-    @graph_q = Gruff::Line.new
-    @graph_q.theme_rails_keynote
-    @graph_q.hide_dots = true
-    colors = @graph_q.colors
-    colors << '#daaea9'
-    colors << '#daaeda'
-    @graph_q.colors = colors
-    @graph_q.title = "Q-Values"
+    unless @thinker
+      @graph_q = Gruff::Line.new
+      @graph_q.theme_rails_keynote
+      @graph_q.hide_dots = true
+      colors = @graph_q.colors
+      colors << '#daaea9'
+      colors << '#daaeda'
+      @graph_q.colors = colors
+      @graph_q.title = "Q-Values"
+    end
   end
 
   def reset()
@@ -107,18 +109,17 @@ class Agent
     @graph_data = Hash.new { |h, k| h[k] = [] }
   end
 
-  def run(steps=nil)
+  def run(steps=-1)
     reset
 
     until @health <= 0
       live_day
       doctors_checkup if checkup_time
-      contemplate_life if thinking_time
       break if !steps.nil? and @days_lived == steps
     end
 
-    assess_lifespan unless @thinker
-    add_to_graph unless @thinker
+    assess_lifespan
+    add_to_graph
 
     @history_file.puts @history.inspect unless @history_file.nil?
   end
@@ -128,7 +129,7 @@ class Agent
   end
 
   def thinking_time
-    !@thinker and @thinking_frequency > 0 and @doctor_count > 0 and @doctor_count % @thinking_frequency == 0
+    @thinking_frequency > 0 and @doctor_count > 0 and @doctor_count % @thinking_frequency == 0
   end
 
   def live_day()
@@ -169,7 +170,7 @@ class Agent
 
   def update_score(well, food)
     @qvalues.update(well, food.score) unless checkup_time
-    update_graph_data unless @thinker
+    update_graph_data
   end
 
   def update_health(well, food)
@@ -185,46 +186,56 @@ class Agent
     @qvalues.update(@history_last, food.score + difference)
     print "    " if @thinker
     puts "Run ##{@run_number} Difference: #{difference} (#{food.score + difference}) - #{@history_last} (#{@qvalues[@history_last]}): #{@health}"
+
+    contemplate_life if thinking_time
+
     #update_graph_data
   end
 
   def contemplate_life
-    puts "Contemplate life: ##{@contemplation_count}"
-    contemplate_options = @options.merge({:history => nil, :retain => true})
+    unless @thinker
+      puts "Contemplate life: ##{@contemplation_count}"
+      contemplate_options = @options.merge({:history => nil, :retain => true})
 
-    # Set to be a thinker (avoid recursive thinking)
-    agent = Agent.new(contemplate_options, true) do
-      @history_last
-    end
+      # Set to be a thinker (avoid recursive thinking)
+      agent = Agent.new(contemplate_options, true) do
+        @history_last
+      end
 
-    agent.qvalues = @qvalues.clone
-    @thinking_runs.times do
-      agent.run(@thinking_steps)
+      agent.qvalues = @qvalues.clone
+      @thinking_runs.times do
+        agent.run(@thinking_steps)
+      end
+      @qvalues = agent.qvalues
+      puts "Ceased contemplation"
+      @contemplation_count += 1
     end
-    @qvalues = agent.qvalues
-    puts "Ceased contemplation"
-    @contemplation_count += 1
   end
 
   def assess_lifespan
-    @qvalues.update_dead(@history_last, -100)
-    #update_graph_data
+    unless @thinker
+      @qvalues.update_dead(@history_last, -100)
+      #update_graph_data
+    end
   end
 
   def update_graph_data
-    @graph_data[:unhealthy] << @qvalues[:unhealthy]
-    @graph_data[:healthy] << @qvalues[:healthy]
+    unless @thinker
+      @graph_data[:unhealthy] << @qvalues[:unhealthy]
+      @graph_data[:healthy] << @qvalues[:healthy]
+    end
   end
 
   def add_to_graph
-    @graph_max ||= @days_lived
-    @graph_max = [@graph_max, @days_lived].max
-    @graph_q.data("Unhealthy (#{@run_number})", @graph_data[:unhealthy])
-    @graph_q.data("Healthy (#{@run_number})", @graph_data[:healthy])
+    unless @thinker
+      @graph_max ||= @days_lived
+      @graph_max = [@graph_max, @days_lived].max
+      @graph_q.data("Unhealthy (#{@run_number})", @graph_data[:unhealthy])
+      @graph_q.data("Healthy (#{@run_number})", @graph_data[:healthy])
+    end
   end
 
   def save_graph
-
     think_label = @checkup_frequency * @thinking_frequency
     @graph_q.labels = { @graph_max-1 => "#{@graph_max-1}",
                         @exploration => "E:#{@exploration}",
@@ -283,7 +294,7 @@ OptionParser.new do |opts|
     OPTIONS[:thinking_runs] = i
   end
 
-  opts.on("-z", "--thinking-steps [NUM]", Integer, "Number of steps to limit thinking to",
+  opts.on("-z", "--thinking-steps [NUM]", Integer, "Number of steps to limit thinking to (-1 for inf)",
           "   Default: #{OPTIONS[:thinking_steps]}") do |i|
     OPTIONS[:thinking_steps] = i
   end
