@@ -97,7 +97,7 @@ class Agent
     @history_last = nil
     @history = []
 
-    if !@retain_qvalues or @run_number == 1
+    if !@thinker and (!@retain_qvalues or @run_number == 1)
       @qvalues = QValues.new(@alpha, @gamma)
       WELLS.keys.each do |key|
         @qvalues[key] = 0
@@ -117,8 +117,8 @@ class Agent
       break if !steps.nil? and @days_lived == steps
     end
 
-    assess_lifespan
-    add_to_graph
+    assess_lifespan unless @thinker
+    add_to_graph unless @thinker
 
     @history_file.puts @history.inspect unless @history_file.nil?
   end
@@ -169,7 +169,7 @@ class Agent
 
   def update_score(well, food)
     @qvalues.update(well, food.score) unless checkup_time
-    update_graph_data
+    update_graph_data unless @thinker
   end
 
   def update_health(well, food)
@@ -313,10 +313,6 @@ OptionParser.new do |opts|
     OPTIONS[:health] = i
   end
 
-  opts.on("-r", "--retain", "Retain Q-Values between runs", "   Default: #{OPTIONS[:retain]}") do
-    OPTIONS[:retain] = true
-  end
-
   opts.on("-y", "--history [FILE]", "History log file. If none supplied, will not log") do |f|
     OPTIONS[:history] = File.open(f, "w")
   end
@@ -325,9 +321,13 @@ OptionParser.new do |opts|
     OPTIONS[:graph] = f
   end
 
-  opts.on("-u", "--runs [NUM]", Integer, "Number of runs for an agent",
+  opts.on("-r", "--runs [NUM]", Integer, "Number of runs for an agent",
           "   Default: #{OPTIONS[:runs]}") do |i|
     OPTIONS[:runs] = i
+  end
+
+  opts.on("--retain", "Retain Q-Values between runs", "   Default: #{OPTIONS[:retain]}") do
+    OPTIONS[:retain] = true
   end
 
   opts.on("--save [FILE]", "Save options configuration to file. If none supplied, will not save") do |f|
