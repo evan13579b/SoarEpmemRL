@@ -200,7 +200,7 @@ class Agent
       contemplate_options = @options.merge({:history => nil, :retain => true})
 
       # Set to be a thinker (avoid recursive thinking)
-      agent = Agent.new(contemplate_options, true, true) do
+      agent = Agent.new(contemplate_options, @hush, true) do
         @history_last
       end
 
@@ -247,7 +247,7 @@ class Agent
   end
 
   def to_yaml
-    OPTIONS.to_yaml
+    @options.to_yaml
   end
 end
 
@@ -346,7 +346,7 @@ OptionParser.new do |opts|
     $save = File.open(f, "w")
   end
 
-  opts.on("--[no-]hush", "Hush agent output", "   Default: #{OPTIONS[:hush]}") do |s|
+  opts.on("--[no-]hush", "Hush agent output") do |s|
     $hush = s
   end
 end.parse!
@@ -354,12 +354,14 @@ end.parse!
 # TODO Add ability to define the wells in CLI/config
 
 unless OPTIONS[:config].nil?
+  # Batch configuration
   experiments = YAML::load(File.open(OPTIONS[:config]))
 
-  experiments.each_pair do |key, e|
+  experiments.each_pair do |key, config|
     puts "Beginning Experiment: '#{key}'"
-    agent = Agent.new(e, $hush)
-    e[:runs].times do
+    full_config = OPTIONS.merge(config) # Merge with defaults to fill out partial
+    agent = Agent.new(full_config, $hush)
+    full_config[:runs].times do
       agent.run()
     end
     agent.save_graph

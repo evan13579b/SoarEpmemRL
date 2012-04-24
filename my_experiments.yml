@@ -12,7 +12,7 @@ experiment_one:
   :hush: false
   :history: false
   :graph: q-values-experiment_one.png
-  :runs: 1
+  :runs: 2
 experiment_two:
   :checkup: 10
   :thinking_frequency: 10
