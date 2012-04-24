@@ -1,0 +1,30 @@
+experiment_one:
+  :checkup: 10
+  :thinking_frequency: 10
+  :thinking_runs: 1
+  :thinking_steps: 200
+  :exploration: 50
+  :epsilon: 0.1
+  :alpha: 0.2
+  :gamma: 0.8
+  :health: 200
+  :retain: false
+  :hush: false
+  :history: false
+  :graph: q-values-experiment_one.png
+  :runs: 1
+experiment_two:
+  :checkup: 10
+  :thinking_frequency: 10
+  :thinking_runs: 1
+  :thinking_steps: 200
+  :exploration: 50
+  :epsilon: 0.1
+  :alpha: 0.2
+  :gamma: 0.8
+  :health: 200
+  :retain: false
+  :hush: true
+  :history: false
+  :graph: q-values-experiment_two.png
+  :runs: 1
