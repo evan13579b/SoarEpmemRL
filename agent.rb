@@ -51,7 +51,7 @@ class Agent
 
   attr_accessor :qvalues
   attr_reader :run_number, :days_lived, :history, :health, :history
-  def initialize(options, thinker=false, &block)
+  def initialize(options, hush=false, thinker=false, &block)
     @options = options # maintain for "thinking"
     @thinker = thinker
 
@@ -68,6 +68,8 @@ class Agent
 
     @history_file = options[:history]
     @graph_file = options[:graph]
+
+    @hush = hush
 
     @run_number = 0
 
@@ -121,7 +123,7 @@ class Agent
     assess_lifespan
     add_to_graph
 
-    @history_file.puts @history.inspect unless @history_file.nil?
+    @history_file.puts @history.inspect if @history_file
   end
 
   def checkup_time
@@ -184,8 +186,8 @@ class Agent
 
     food = WELLS[@history_last]
     @qvalues.update(@history_last, food.score + difference)
-    print "    " if @thinker
-    puts "Run ##{@run_number} Difference: #{difference} (#{food.score + difference}) - #{@history_last} (#{@qvalues[@history_last]}): #{@health}"
+    print "    " if @thinker and !@hush
+    puts "Run ##{@run_number} Difference: #{difference} (#{food.score + difference}) - #{@history_last} (#{@qvalues[@history_last]}): #{@health}" unless @hush
 
     contemplate_life if thinking_time
 
@@ -194,11 +196,11 @@ class Agent
 
   def contemplate_life
     unless @thinker
-      puts "Contemplate life: ##{@contemplation_count}"
+      puts "Contemplate life: ##{@contemplation_count}" unless @hush
       contemplate_options = @options.merge({:history => nil, :retain => true})
 
       # Set to be a thinker (avoid recursive thinking)
-      agent = Agent.new(contemplate_options, true) do
+      agent = Agent.new(contemplate_options, true, true) do
         @history_last
       end
 
@@ -207,7 +209,7 @@ class Agent
         agent.run(@thinking_steps)
       end
       @qvalues = agent.qvalues
-      puts "Ceased contemplation"
+      puts "Ceased contemplation" unless @hush
       @contemplation_count += 1
     end
   end
@@ -245,7 +247,7 @@ class Agent
   end
 
   def to_yaml
-    OPTIONS.merge(WELLS).to_yaml
+    OPTIONS.to_yaml
   end
 end
 
@@ -264,12 +266,11 @@ OPTIONS = {
   :gamma => 0.8,
   :health => 100,
   :retain => false,
-  :history => nil,
+  :history => false,
   :graph => "q-values.png",
 
   ## Script settings
   :runs => 1,
-  :save => nil
 }
 
 OptionParser.new do |opts|
@@ -344,18 +345,30 @@ OptionParser.new do |opts|
   opts.on("--save [FILE]", "Save options configuration to file. If none supplied, will not save") do |f|
     $save = File.open(f, "w")
   end
+
+  opts.on("--[no-]hush", "Hush agent output", "   Default: #{OPTIONS[:hush]}") do |s|
+    $hush = s
+  end
 end.parse!
 
 # TODO Add ability to define the wells in CLI/config
 
 unless OPTIONS[:config].nil?
-  # TODO DO BATCHING
+  experiments = YAML::load(File.open(OPTIONS[:config]))
+
+  experiments.each_pair do |key, e|
+    puts "Beginning Experiment: '#{key}'"
+    agent = Agent.new(e, $hush)
+    e[:runs].times do
+      agent.run()
+    end
+    agent.save_graph
+  end
 else
   # Single shot run
-
   OPTIONS.delete(:config) # Pull this out so that the save looks a little cleaner
 
-  agent = Agent.new(OPTIONS)
+  agent = Agent.new(OPTIONS, $hush)
   OPTIONS[:runs].times do
     agent.run()
   end
