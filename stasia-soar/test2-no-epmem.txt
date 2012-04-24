@@ -1,0 +1,48 @@
+junk-health*rl*center-previous-junk  90. 23.87643820843754
+junk-health*rl*center-previous-health  9. 13.00877323535032
+junk-health*rl*junk  91. 14.53577242555467
+junk-health*rl*health  9. 12.62293404894069
+
+Health: 9550, 100 meals
+
+
+
+
+junk-health*rl*center-previous-junk  186. 22.15670949370346
+junk-health*rl*center-previous-health  13. 18.94255890927441
+junk-health*rl*junk  187. 24.81505498890497
+junk-health*rl*health  13. 18.56807827169885
+
+Health: 9070, 200 meals
+
+
+
+
+junk-health*rl*center-previous-junk  282. 22.82166825641577
+junk-health*rl*center-previous-health  17. 21.83005607167527
+junk-health*rl*junk  283. 25.4683577630136
+junk-health*rl*health  17. 23.25231122881625
+
+Health: 8590, 300 meals
+
+
+
+
+
+junk-health*rl*center-previous-junk  329. 24.84084663974301
+junk-health*rl*center-previous-health  70. 26.70177687971756
+junk-health*rl*junk  329. 25.99502284964596
+junk-health*rl*health  71. 29.89066460236894
+
+Health: 8355, 400 meals
+
+
+
+
+junk-health*rl*center-previous-junk  335. 26.8960644442905
+junk-health*rl*center-previous-health  164. 26.78796628487797
+junk-health*rl*junk  335. 28.53183218197125
+junk-health*rl*health  165. 30.1960106494072
+
+
+Health: 8325, 500 meals

@@ -1,0 +1,60 @@
+junk-health*rl*center-previous-junk  96. 19.19925390826066
+junk-health*rl*center-previous-health  3. 12.24589443661562
+junk-health*rl*junk  97. 12.56664678451902
+junk-health*rl*health  3. 5.942593568003672
+
+Health: 9520, 100 meals
+
+
+
+
+junk-health*rl*center-previous-junk  193. 19.73799596978515
+junk-health*rl*center-previous-health  6. 17.25254075664319
+junk-health*rl*junk  194. 21.71757070080579
+junk-health*rl*health  6. 13.96645576303887
+
+Health: 9035 100 meals + 100 meals replayed
+(this health from remember state, will go back to the last health value)
+
+
+
+
+junk-health*rl*center-previous-junk  288. 21.47108927644943
+junk-health*rl*center-previous-health  10. 21.19776022817111
+junk-health*rl*junk  289. 24.23319675205562
+junk-health*rl*health  10. 21.37197978635675
+
+Health: 9040, 200 meals 
+
+
+
+
+
+junk-health*rl*center-previous-junk  363. 23.81757205931874
+junk-health*rl*center-previous-health  35. 24.88653450533465
+junk-health*rl*junk  364. 25.6983406843849
+junk-health*rl*health  35. 28.02230242852935
+
+Health: 8665, 300 meals
+
+
+
+
+junk-health*rl*center-previous-junk  370. 26.80010330774915
+junk-health*rl*center-previous-health  128. 27.21402916246919
+junk-health*rl*junk  371. 27.99169271154266
+junk-health*rl*health  128. 30.3640899636421
+
+Health: 8630, 400 meals
+
+
+
+
+
+junk-health*rl*center-previous-junk  372. 27.38411531488722
+junk-health*rl*center-previous-health  176. 27.6242566652988
+junk-health*rl*junk  373. 28.66414972240786
+junk-health*rl*health  176. 30.78054479184591
+
+Health: 8620, 500 meals
+

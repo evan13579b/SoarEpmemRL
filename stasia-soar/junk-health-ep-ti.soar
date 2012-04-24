@@ -1,0 +1,567 @@
+rl --set learning on
+epmem --set learning on
+epmem --set trigger dc
+
+##
+# make substate have the name of the superstate operator
+##
+sp {elaborate*state*name
+   (state <s> ^superstate.operator.name <name>)
+-->
+   (<s> ^name <name>)
+}
+
+##
+# copy pointer of stateinfo to substate
+##
+sp {elaborate*state*info-to-transfer
+   (state <s> ^superstate.stateinfo <si>)
+-->
+   (<s> ^stateinfo <si>)
+}
+
+
+##
+# propose initialize the top state
+##
+sp {propose*initialize-junk-health
+   (state <s> ^superstate nil
+             -^name)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialize-junk-health)
+}
+
+##
+# Store the available directions
+# and associated reward on the state
+# init counter, checkup rate, and health
+##
+sp {apply*initialize-junk-health
+   (state <s> ^operator <op>)
+   (<op> ^name initialize-junk-health)
+-->
+   (<s> ^name junk-health
+		^stateinfo <si>)
+   (<si> ^direction <d1> <d2> <d3> <d4>
+		 ^actions <a1> <a2>
+         ^checkup 19
+		 ^action eat-food
+		 ^saved-location center
+		 ^saved-health 10000)
+   (<d1> ^name junk ^reward 10 ^previous center  ^negreward -5)
+   (<d2> ^name health ^reward 6 ^previous center ^negreward 0)
+   (<d3> ^name center ^reward 0 ^previous junk ^negreward 0)
+   (<d4> ^name center ^reward 0 ^previous health ^negreward 0)
+   #(<a1> ^current eat-food ^next think-food)
+   (<a1> ^current eat-food ^next eat-food2)
+   (<a2> ^current think-food ^next eat-food2)
+}
+
+##
+# propose eat-food substate
+##
+sp {propose*eat-food
+   (state <s> ^name junk-health
+              ^stateinfo <si>)
+   (<si> ^action eat-food)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name eat-food)
+}
+
+##
+# propose init eat-food state
+##
+sp {propose*initialize-eat-food
+   (state <s> ^name eat-food
+             -^tempinfo)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialize-eat-food)
+}
+
+##
+# init for eat-food substate
+##
+sp {apply*eat-food
+   (state <s> ^operator <op>
+              ^stateinfo <si>)
+   (<si> ^saved-health <newhealth>
+         ^saved-location <newlocation>)
+   (<op> ^name initialize-eat-food)
+-->
+   (<s> ^tempinfo <ti>)
+   (<ti> ^health <newhealth>)
+   (<ti> ^location <newlocation>)
+   (<ti> ^previous center)
+   (<ti> ^counter 1)
+   (<ti> ^checkup-counter 1)
+   (<ti> ^checkup-max 10)
+   (<ti> ^discount-total 0)
+   (<ti> ^discount-apply 0)
+}
+
+##
+# propose think-food substate
+##
+sp {propose*think-food
+   (state <s> ^name junk-health
+              ^stateinfo <si>)
+   (<si> ^action think-food)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name think-food)
+}
+
+##
+# propose init think-food state
+##
+sp {propose*initialize-think-food
+   (state <s> ^name think-food
+             -^tempinfo)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialize-think-food)
+}
+
+##
+# re-init for think-food substate
+##
+sp {apply*think-food
+   (state <s> ^operator <op>
+              ^stateinfo <si>)
+   (state <super> ^name junk-health
+                  ^epmemstart <epstart>
+				  ^epmemstop <epstop>)
+   (<op> ^name initialize-think-food)
+   (<si> ^saved-health <newhealth>
+		 ^saved-location <newlocation>)
+-->
+   (<s> ^tempinfo <ti>)
+   (<ti> ^health <newhealth>)
+   (<ti> ^location <newlocation>)
+   (<ti> ^previous center)
+   (<ti> ^discount-apply 0)
+   (<ti> ^counter <epstart>)
+   (<ti> ^countermax ( - <epstop> 1))
+}
+
+
+##
+# propose eat-food2 substate
+##
+sp {propose*eat-food2
+   (state <s> ^name junk-health
+              ^stateinfo <si>)
+   (<si> ^action eat-food2)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name eat-food2)
+}
+
+##
+# propose init eat-food2 state
+##
+sp {propose*initialize-eat-food2
+   (state <s> ^name eat-food2
+             -^tempinfo)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialize-eat-food2)
+}
+
+##
+# re-init for eat-food2 substate
+##
+sp {apply*eat-food2
+   (state <s> ^operator <op>
+              ^stateinfo <si>)
+   (state <super> ^name junk-health
+                  ^epmemstart <epstart>
+				  ^epmemstop <epstop>)
+   (<op> ^name initialize-eat-food2)
+   (<si> ^saved-health <newhealth>
+		 ^saved-location <newlocation>)
+-->
+   (<s> ^tempinfo <ti>)
+   (<ti> ^health <newhealth>)
+   (<ti> ^location <newlocation>)
+   (<ti> ^previous center)
+   (<ti> ^discount-apply 0)
+}
+
+
+##
+# When a direction is chosen, assert the associated reward
+##
+sp {elaborate*reward
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^reward-link <r>
+			  ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (state <super> ^name junk-health
+				  ^templocation <oldloc>)
+   (<si> ^direction <dir>)
+   (<ti> ^location <d-name>
+         ^previous <p-dir>
+         ^discount-apply <dis>)
+   (<dir> ^name <d-name> ^previous <p-dir> ^reward <d-reward>)
+-->
+   (<r> ^reward <r1> <r2>)
+   (<r1> ^value <d-reward>)
+   (<r2> ^value <dis>)
+   (<super> ^templocation <oldloc> - <d-name>)
+}
+
+##
+# When a direction is chosen, assert the associated reward
+# init values
+##
+sp {elaborate*reward-initial
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^reward-link <r>
+			  ^stateinfo <si>
+			  ^tempinfo <ti>
+			  ^epmem <epmem>)
+   (state <super> ^name junk-health
+                  -^templocation)
+   (<epmem> ^present-id <id>)
+   (<si> ^direction <dir>)
+   (<ti> ^location <d-name>
+         ^previous <p-dir>
+         ^discount-apply <dis>)
+   (<dir> ^name <d-name> ^previous <p-dir> ^reward <d-reward>)
+-->
+   (<r> ^reward <r1> <r2>)
+   (<r1> ^value <d-reward>)
+   (<r2> ^value <dis>)
+   (<super> ^epmemstart <id>
+            ^templocation <d-name>)
+}
+
+
+##
+# Propose moving to new location
+##
+sp {junk-health*propose*move
+   (state <s> ^name << eat-food eat-food2 >>
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^direction <d>)
+   (<ti> ^location <loc>)
+   (<d> ^name {<dir> <> <loc>} ^previous <loc> ^negreward <neg>)
+-->
+   (<s> ^operator <op> +)
+   (<op> ^name move
+         ^dir <dir>
+         ^previous <loc>
+         ^discount <neg>)
+}
+
+
+##
+# Soar-RL rule for moving towards health food
+##
+sp {junk-health*rl*health
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^operator <op> +)
+   (<op> ^name move
+         ^dir health
+         ^previous center)
+-->
+   (<s> ^operator <op> = 0)
+}
+
+##
+# Soar-RL rule for moving towards junk food
+##
+sp {junk-health*rl*junk
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^operator <op> +)
+   (<op> ^name move
+         ^dir junk
+         ^previous center)
+-->
+   (<s> ^operator <op> = 0)
+}
+
+##
+# Soar-RL rule for moving towards center
+##
+sp {junk-health*rl*center-previous-health
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^operator <op> +)
+   (<op> ^name move
+         ^dir center
+         ^previous health)
+-->
+   (<s> ^operator <op> = 0)
+}
+
+##
+# Soar-RL rule for moving towards center
+##
+sp {junk-health*rl*center-previous-junk
+   (state <s> ^name << eat-food think-food eat-food2 >>
+              ^operator <op> +)
+   (<op> ^name move
+         ^dir center
+         ^previous junk)
+-->
+   (<s> ^operator <op> = 0)
+}
+
+
+##
+# for eat food move between checkups
+##
+sp {apply*move
+   (state <s> ^operator <op>
+              ^name eat-food
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^checkup <check>)
+   (<ti> ^location <current>
+         ^previous <prev>      
+         ^counter <count> < <check>
+         ^discount-apply <dis>
+         ^discount-total <distot>
+		 ^health <health>)
+   (<op> ^name move
+         ^dir <dir> <> <current>
+         ^previous <last>
+         ^discount <curdis>)     
+-->
+   (<ti> ^location <current> - <dir>)
+   (<ti> ^previous <prev> - <last>)
+   (<ti> ^counter <count> - ( + <count> 1))
+   (<ti> ^discount-apply <dis> - 0)
+   (<ti> ^discount-total <distot> - (+ <distot> <curdis>))
+   (<ti> ^health <health> - (+ <health> <curdis>))
+   (write (crlf) |Moved: | <dir>)
+   (write (crlf) |Health: | <health>)
+}
+
+
+##
+# Apply "checkup" for eat food.  signal change when checkup count >= max checkup
+##
+sp {apply*move-and-counter-eat
+   (state <s> ^operator <op>
+              ^name eat-food
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^checkup <check>
+         ^saved-health <updatehealth>
+         ^saved-location <updatelocation>)		 
+   (<ti> ^location <current>
+         ^previous <prev>
+         ^counter <count> >= <check>
+         ^discount-apply <dis>
+         ^discount-total <distot>
+         ^health <health>
+		 ^checkup-max <checkmax>
+		 ^checkup-counter <checkcount> < <checkmax>
+		 ^health <health>
+		 -^change)
+   (<op> ^name move
+         ^dir <dir> <> <current>
+         ^previous <last>
+         ^discount <curdis>)
+-->
+   (<ti> ^location <current> - <dir>)
+   (<ti> ^previous <prev> - <last>)
+   (<ti> ^discount-apply <dis> - (+ <distot> <curdis>))
+   (<ti> ^discount-total <distot> - 0)
+   (<ti> ^counter <count> - 0)   
+   (<ti> ^health <health> - (+ <health> <curdis>))
+   (<ti> ^checkup-counter <checkcount> - (+ <checkcount> 1))
+   (write (crlf) |Moved: | <dir>)
+   (write (crlf) |Health: | <health>)
+   (write (crlf) |Checkup!| <checkcount>)
+}
+
+##
+# Apply last "checkup" for eat food
+##
+sp {apply*move-and-counter-eat-last
+   (state <s> ^operator <op>
+              ^name eat-food
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^checkup <check>
+         ^saved-health <updatehealth>
+         ^saved-location <updatelocation>)		 
+   (<ti> ^location <current>
+         ^previous <prev>
+         ^counter <count> >= <check>
+         ^discount-apply <dis>
+         ^discount-total <distot>
+         ^health <health>
+		 ^checkup-max <checkmax>
+		 ^checkup-counter <checkcount> >= <checkmax>
+		 -^change)
+   (<op> ^name move
+         ^dir <dir> <> <current>
+         ^previous <last>
+         ^discount <curdis>)
+-->
+   (<ti> ^location <current> - <dir>)
+   (<ti> ^previous <prev> - <last>)
+   (<ti> ^discount-apply <dis> - (+ <distot> <curdis>))
+   (<ti> ^discount-total <distot> - 0)
+   (<ti> ^counter <count> - ( + <count> 1))   
+   (<ti> ^health <health> - (+ <health> <curdis>))
+   (<ti> ^checkup-counter <checkcount> - (+ <checkcount> 1))
+   (<ti> ^change true)
+   (write (crlf) |Moved: | <dir>)
+   (write (crlf) |Health: | <health>)
+   (write (crlf) |Last Checkup!| <checkcount>)
+}
+
+##
+# Done with eat food and want to switch to remember food
+##
+sp {apply*move-and-counter-eat-end-eat
+   (state <s> ^operator <op>
+              ^name eat-food
+              ^stateinfo <si>
+			  ^tempinfo <ti>
+			  ^epmem <epmem>)
+   (state <super> ^name junk-health)
+   (<epmem> ^present-id <id>)
+   (<si> ^action <action>
+		 ^actions <actions>
+		 ^saved-health <updatehealth>
+		 ^saved-location <updatelocation>)		 
+   (<ti> ^change true
+         ^location <current>
+		 ^health <health>
+		 ^previous <last>)
+   (<op> ^name move
+         ^dir <dir> <> <current>)
+   (<actions> ^current <action> ^next <newaction>)
+-->
+   (<si> ^action <action> - <newaction>)
+   (<si> ^saved-health <updatehealth> - <health>)
+   (<si> ^saved-location <updatelocation> - <last>)
+   (<super> ^epmemstop <id>)
+   (write (crlf) |switch to think food!|)
+}
+
+##
+# think-food apply "check" every move
+##
+sp {apply*move-and-counter-think
+   (state <s> ^operator <op>
+              ^name think-food
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^checkup <check>)
+   (<ti> ^location <current>
+         ^previous <prev>
+         ^discount-apply <dis>
+         ^health <health>
+		 ^countermax <max>
+		 ^counter <count> < <max>)
+   (<op> ^name move
+         ^dir <dir> <> <current>
+         ^previous <last>
+         ^discount <curdis>)
+-->
+   (<ti> ^location <current> - <dir>)
+   (<ti> ^previous <prev> - <last>)
+   (<ti> ^discount-apply <dis> - <curdis>) 
+   (<ti> ^health <health> - (+ <health> <curdis>)) 
+   (<ti> ^counter <count> - (+ <count> 1))
+   (write (crlf) |Moved: | <dir>)
+   (write (crlf) |Health: | <health>)
+}
+
+##
+# if thinking about food and reach the epmem stop point switch to next state
+##
+sp {apply*move-switch-to-eating
+   (state <s> ^operator <op>
+              ^name think-food 
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<ti> ^countermax <max>
+         ^counter <count> >= <max>)
+   (<si> ^action <action>)
+   (<op> ^name move)
+-->
+   (<si> ^action <action> - eat-food2)
+   (write (crlf) |switch!|)
+}
+   
+
+##
+# Propose moving to new location
+##
+sp {junk-health*propose*move-think-food
+   (state <s> ^name think-food
+              ^epmem.result.retrieved.templocation <oldlocation>
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^direction <d>)
+   (<ti> ^location <loc>)
+   (<d> ^name <oldlocation> ^previous <loc> ^negreward <neg>)
+-->
+   (<s> ^operator <op> +)
+   (<op> ^name move
+         ^dir <oldlocation>
+         ^previous <loc>
+         ^discount <neg>)
+}
+	
+
+##
+# Print out previous memory's action
+##
+sp {print-previous-memory-action
+	(state <s> ^name think-food
+			   ^epmem.result.retrieved.templocation <prev>)
+-->
+	(write (crlf) |location:| <prev>)
+}
+
+##
+# Recall previous action
+##
+sp {recall-previous-action
+	(state <s> ^name think-food
+       	       ^epmem <epmem>
+			   ^tempinfo <ti>)
+    (<ti> ^counter <count>)
+	(<epmem> ^command <command>)    
+-->
+	(<command> ^retrieve <count>)
+}
+
+##
+# think-food apply "check" every move
+##
+sp {apply*move-and-counter-eat-food2
+   (state <s> ^operator <op>
+              ^name eat-food2
+              ^stateinfo <si>
+			  ^tempinfo <ti>)
+   (<si> ^checkup <check>)
+   (<ti> ^location <current>
+         ^previous <prev>
+         ^discount-apply <dis>
+         ^health <health>)
+   (<op> ^name move
+         ^dir <dir> <> <current>
+         ^previous <last>
+         ^discount <curdis>)
+-->
+   (<ti> ^location <current> - <dir>)
+   (<ti> ^previous <prev> - <last>)
+   (<ti> ^discount-apply <dis> - <curdis>) 
+   (<ti> ^health <health> - (+ <health> <curdis>))
+   (write (crlf) |Moved: | <dir>)
+   (write (crlf) |Health: | <health>)
+}
