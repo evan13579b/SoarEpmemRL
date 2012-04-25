@@ -1,6 +1,0 @@
-sp {elaborate*can-move
-   (state <s>)
-  -(<s> ^re-evaluate true)
--->
-   (<s> ^can-move true)
-}
