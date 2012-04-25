@@ -1,3 +1,5 @@
 *.png
 *~
 *.zip
+*.yml
+!my_experiments.yml
